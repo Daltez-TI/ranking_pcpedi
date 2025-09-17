@@ -6,7 +6,7 @@ Created on Mon Sep 15 09:49:17 2025
 
 Adaptado para SQLite - PCA
 Lê dados de uma tabela existente, calcula pesos via PCA
-(incluindo QT) e grava em uma nova tabela no mesmo banco.
+e grava em uma nova tabela no mesmo banco.
 """
 
 import pandas as pd
