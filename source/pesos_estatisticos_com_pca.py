@@ -17,7 +17,7 @@ from sklearn.decomposition import PCA
 # =====================================================
 # 1. Conectar ao banco e ler a tabela de origem
 # =====================================================
-db_path = "../../database/prototipagem_ranking_Jul25.db3"        # <-- ajuste o caminho do seu banco
+db_path = "G:/TI/marcelo/estudos/projeto_ranking/database/prototipagem_ranking_Ago25.db3"        # <-- ajuste o caminho do seu banco
 tabela_origem = "pcpedi"       # <-- ajuste o nome da tabela de origem
 tabela_destino = "pesos_ranking_pca"
 
@@ -29,19 +29,19 @@ df = pd.read_sql(f"SELECT * FROM {tabela_origem} WHERE CODFILIAL = 1 AND POSICAO
 # =====================================================
 # 2. Preparar métricas relevantes
 # =====================================================
-df["MVA"] = df["VLRVENDA"] / df["PESOBRUTO"].replace(0, 1)
+df["MVA"] = df["VLRVENDA"] / df["TOTBRUTONF"].replace(0, 1)
 
 df_agg = df.groupby("CLIENTE").agg({
     "VLRVENDA": "sum",
     "lucro total (R$)": "sum",
-    "PESOBRUTO": "sum",
+    "TOTBRUTONF": "sum",
     "% brut un.": "mean",
     "Lucro / Kg Liq": "mean",
     "NUMPED": pd.Series.nunique,
     "CODPROD": pd.Series.nunique
 }).reset_index()
 
-df_agg["MVA"] = df_agg["VLRVENDA"] / df_agg["PESOBRUTO"].replace(0, 1)
+df_agg["MVA"] = df_agg["VLRVENDA"] / df_agg["TOTBRUTONF"].replace(0, 1)
 
 # =====================================================
 # 3. Seleção de métricas para PCA

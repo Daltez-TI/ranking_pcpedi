@@ -1,44 +1,58 @@
--- Modelo de Ranking por CLIENTE - Versão Melhorada
--- Foco: Análise por CLIENTE com métricas consolidadas
--- Criado em 2025-09-12
--- Ajustado em 2025-09-15: Normalização dos pesos no Score_Final e Percentil
--- Ajustado em 2025-09-16: Correção cálculo Avg_Margem_Percentual e Avg_Eficiencia_Por_Kg
---                         Retirado cálculo de score para QT (quantidades)
---                         Campo CLIENTE final agora está concatenado com CODREDE e/ou CODCLI
+-- Modelo de Ranking por CLIENTE/REDE - Versão Adaptada
+-- Foco: Agrupar por (CODREDE, NOME_REDE) quando houver rede
+--       Caso contrário, agrupar por (CODCLI, CLIENTE)
 
-CREATE TABLE teste5 as
+CREATE TABLE teste5 AS
 WITH ClienteMetrics AS (
-    -- Etapa 1: Agregação das métricas por CLIENTE
-    SELECT 
-        *,
+    -- Etapa 1: Agregação das métricas por CLIENTE ou REDE
+    SELECT
+        CASE
+            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN CODREDE
+            ELSE CODCLI
+        END AS Agrupa_Cod,
         
-        -- Métricas consolidadas por cliente
+        CASE
+            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN NOME_REDE
+            ELSE CLIENTE
+        END AS Agrupa_Nome,
+
+        -- Métricas consolidadas
         SUM(VLRVENDA) AS Total_Vendas,
         SUM("lucro total (R$)") AS Total_Lucro,
-        SUM(PESOBRUTO) AS Total_Peso_Bruto,
-        
+        SUM(TOTBRUTONF) AS Total_Peso_Bruto,
+
         -- Métricas derivadas
-        ((sum("VLRVENDA") - sum("custo total")) / sum("VLRVENDA")) * 100 AS Avg_Margem_Percentual,
-        (sum("lucro total (R$)") / sum("TOTLIQ")) AS Avg_Eficiencia_Por_Kg,
-        
+        ((SUM("VLRVENDA") - SUM("custo total")) / SUM("VLRVENDA")) * 100 AS Avg_Margem_Percentual,
+        (SUM("lucro total (R$)") / SUM("TOTLIQ")) AS Avg_Eficiencia_Por_Kg,
+
         -- Novo indicador MVA (Valor de Venda por Peso Bruto)
         CASE 
-            WHEN SUM(PESOBRUTO) > 0 THEN SUM(VLRVENDA) / SUM(PESOBRUTO)
+            WHEN SUM(TOTBRUTONF) > 0 THEN SUM(VLRVENDA) / SUM(TOTBRUTONF)
             ELSE 0 
         END AS MVA_Score,
-        
+
         -- Frequência de pedidos
         COUNT(DISTINCT NUMPED) AS Freq_Pedidos,
         COUNT(DISTINCT CODPROD) AS Diversidade_Produtos,
-        count(DISTINCT CODCLI) AS Lojas
-        
+        COUNT(DISTINCT CODCLI) AS Lojas,
+
+        -- Referências
+        MAX(CODREDE) AS CODREDE,
+        MAX(CODGRUPO) AS CODGRUPO
     FROM pcpedi
     WHERE
         CODFILIAL = 1
         AND POSICAO = 'F'
         AND CONDVENDA = 1
     GROUP BY 
-        CLIENTE
+        CASE
+            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN CODREDE
+            ELSE CODCLI
+        END,
+        CASE
+            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN NOME_REDE
+            ELSE CLIENTE
+        END
 ),
 
 RankedClientes AS (
@@ -51,7 +65,6 @@ RankedClientes AS (
         NTILE(4) OVER (ORDER BY Freq_Pedidos) AS Frequencia_Score,
         NTILE(4) OVER (ORDER BY Avg_Eficiencia_Por_Kg) AS Eficiencia_Score,
         NTILE(4) OVER (ORDER BY Diversidade_Produtos) AS Diversidade_Score
-        
     FROM ClienteMetrics
 ),
 
@@ -81,20 +94,20 @@ ScoredClientes AS (
                 Diversidade_Score  * (SELECT peso FROM pesos_ranking_pca WHERE metrica = 'Diversidade_Score')
             ) / (SELECT SUM(peso) FROM pesos_ranking_pca)
         ) AS Percentil
-        
     FROM RankedClientes
 )
 
 -- Etapa 4: Resultado final com ranking e análise detalhada
 SELECT
     CASE
-        WHEN CODREDE <> 0 THEN 'Rede ' || CAST(CODREDE AS TEXT)  || ' - ' || CLIENTE
-        ELSE 'Cliente ' || CAST(CODCLI AS TEXT) ||  ' - ' || CLIENTE
+        WHEN CODREDE <> 0 AND Agrupa_Nome IS NOT NULL
+            THEN 'Rede ' || CAST(Agrupa_Cod AS TEXT) || ' - ' || Agrupa_Nome
+        ELSE 'Cliente ' || CAST(Agrupa_Cod AS TEXT) || ' - ' || Agrupa_Nome
     END AS CLIENTE,
     Lojas,
     CODREDE,
     CODGRUPO,
-    
+
     -- Métricas consolidadas
     ROUND(Total_Vendas, 2) AS Total_Vendas,
     ROUND(Total_Lucro, 2) AS Total_Lucro,
@@ -102,7 +115,7 @@ SELECT
     ROUND(Avg_Margem_Percentual, 2) AS Media_Margem_Perc,
     Freq_Pedidos,
     Diversidade_Produtos,
-    
+
     -- Scores individuais
     Vendas_Score,
     Lucro_Score, 
@@ -130,3 +143,4 @@ SELECT
 
 FROM ScoredClientes
 ORDER BY TotalScore_Ponderado DESC, Total_Vendas DESC;
+
