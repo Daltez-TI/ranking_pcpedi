@@ -54,7 +54,7 @@ DATABASE_PATH = "caminho/para/seu/database.db3"
 
 1. **Execute o cálculo de pesos PCA**
 ```bash
-python pesos_estatisticos_para_db_com_pca.py
+python pesos_estatisticos_com_pca.py
 ```
 
 2. **Execute a query de ranking**
@@ -71,14 +71,15 @@ Tabela: teste5 (resultado final)
 
 ## 📊 Métricas do Sistema
 
-| Métrica | Peso¹ | Descrição |
-|---------|-------|-----------|
-| **Vendas Totais** | ~25% | Volume financeiro consolidado |
-| **Lucro Total** | ~25% | Contribuição absoluta de rentabilidade |
-| **MVA (Valor/Peso)** | ~20% | Eficiência por unidade de peso² |
-| **Margem %** | ~15% | Qualidade da margem independente do volume |
-| **Frequência** | ~10% | Recorrência de pedidos (fidelidade) |
-| **Eficiência/Kg** | ~5% | Otimização logística por peso líquido |
+| Métrica              | Descrição                                  |
+|----------------------|--------------------------------------------|
+| **Vendas Totais**    | Volume financeiro consolidado              |
+| **Lucro Total**      | Contribuição absoluta de rentabilidade     |
+| **Margem %**         | Qualidade da margem independente do volume |
+| **Eficiência/Kg**    | Otimização logística por peso líquido      |
+| **Frequência**       | Recorrência de pedidos (fidelidade)        |
+| **Diversidade**      | Diversidade de produtos                    |
+| **MVA (Valor/Peso)** | Eficiência por unidade de peso²            |
 
 ¹ *Pesos calculados automaticamente via PCA*  
 ² *Métrica inovadora do modelo*
