@@ -241,8 +241,8 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 ## 👨‍💻 Autor
 
 **Marcelo G Facioli**
-- 📧 Email: marcelo.facioli@empresa.com
-- 💼 LinkedIn: [seu-perfil](https://linkedin.com/in/seu-perfil)
+- 📧 Email: marcelo.facioli@daltez.com.br
+- 💼 LinkedIn: [seu-perfil](https://www.linkedin.com/in/marcelo-grandolpho-facioli-99744548/)
 
 ## 🙏 Agradecimentos
 
