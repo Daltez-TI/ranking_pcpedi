@@ -35,7 +35,7 @@ sqlite3
 
 1. **Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/ranking-clientes.git
+git clone https://github.com/Daltez-TI/ranking_pcpedi.git
 cd ranking-clientes
 ```
 
