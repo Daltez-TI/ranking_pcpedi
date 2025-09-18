@@ -6,20 +6,14 @@ CREATE TABLE teste5 AS
 WITH ClienteMetrics AS (
     -- Etapa 1: Agregação das métricas por CLIENTE ou REDE
     SELECT
-        CASE
-            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN CODREDE
-            ELSE CODCLI
-        END AS Agrupa_Cod,
-        
-        CASE
-            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN NOME_REDE
-            ELSE CLIENTE
-        END AS Agrupa_Nome,
+        *,
 
         -- Métricas consolidadas
         SUM(VLRVENDA) AS Total_Vendas,
         SUM("lucro total (R$)") AS Total_Lucro,
         SUM(TOTBRUTONF) AS Total_Peso_Bruto,
+        SUM("custo total") AS Total_Custo,
+        SUM("Lucro por Kg") AS Total_Lucro_Por_Kg,
 
         -- Métricas derivadas
         ((SUM("VLRVENDA") - SUM("custo total")) / SUM("VLRVENDA")) * 100 AS Avg_Margem_Percentual,
@@ -37,22 +31,14 @@ WITH ClienteMetrics AS (
         COUNT(DISTINCT CODCLI) AS Lojas,
 
         -- Referências
-        MAX(CODREDE) AS CODREDE,
-        MAX(CODGRUPO) AS CODGRUPO
+        MAX(CODREDE) AS CODREDE
     FROM pcpedi
     WHERE
         CODFILIAL = 1
         AND POSICAO = 'F'
         AND CONDVENDA = 1
     GROUP BY 
-        CASE
-            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN CODREDE
-            ELSE CODCLI
-        END,
-        CASE
-            WHEN CODREDE <> 0 AND NOME_REDE IS NOT NULL THEN NOME_REDE
-            ELSE CLIENTE
-        END
+        CODCLI
 ),
 
 RankedClientes AS (
@@ -99,18 +85,17 @@ ScoredClientes AS (
 
 -- Etapa 4: Resultado final com ranking e análise detalhada
 SELECT
-    CASE
-        WHEN CODREDE <> 0 AND Agrupa_Nome IS NOT NULL
-            THEN 'Rede ' || CAST(Agrupa_Cod AS TEXT) || ' - ' || Agrupa_Nome
-        ELSE 'Cliente ' || CAST(Agrupa_Cod AS TEXT) || ' - ' || Agrupa_Nome
-    END AS CLIENTE,
+
+    'Cliente ' || CAST(CODCLI AS TEXT) || ' - ' || CLIENTE AS CLIENTE,
     Lojas,
     CODREDE,
-    CODGRUPO,
 
     -- Métricas consolidadas
     ROUND(Total_Vendas, 2) AS Total_Vendas,
     ROUND(Total_Lucro, 2) AS Total_Lucro,
+    ROUND(Total_Peso_Bruto, 2) AS Total_Peso_Bruto,
+    ROUND(Total_Custo, 2) AS Total_Custo,
+    ROUND(Total_Lucro_Por_Kg, 2) AS Total_Lucro_Por_Kg,
     ROUND(MVA_Score, 2) AS MVA_Valor_Por_Peso,
     ROUND(Avg_Margem_Percentual, 2) AS Media_Margem_Perc,
     Freq_Pedidos,

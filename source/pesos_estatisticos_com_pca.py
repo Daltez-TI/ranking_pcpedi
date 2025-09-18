@@ -17,7 +17,7 @@ from sklearn.decomposition import PCA
 # =====================================================
 # 1. Conectar ao banco e ler a tabela de origem
 # =====================================================
-db_path = "G:/TI/marcelo/estudos/projeto_ranking/database/prototipagem_ranking_Ago25.db3"        # <-- ajuste o caminho do seu banco
+db_path = "G:/TI/marcelo/estudos/projeto_ranking/database/prototipagem_ranking_24x25.db3"        # <-- ajuste o caminho do seu banco
 tabela_origem = "pcpedi"       # <-- ajuste o nome da tabela de origem
 tabela_destino = "pesos_ranking_pca"
 
