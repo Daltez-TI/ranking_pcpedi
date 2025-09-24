@@ -97,22 +97,22 @@ WITH ClienteMetrics AS (
         RAMO,
         MUNICENT,
         
-        SUM(VLRVENDA) AS Total_Vendas,
-        SUM(TOTLIQ) AS Total_Peso_Liquido,
+        ROUND(SUM(VLRVENDA), 2) AS Total_Vendas,
+        ROUND(SUM(TOTLIQ), 2) AS Total_Peso_Liquido,
         
-        SUM(
+        ROUND(SUM(
             CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END
-        ) AS Lucro_Total,
+        ), 2) AS Lucro_Total,
         
         COUNT(DISTINCT CODPROD) AS Mix_Produtos,
 
         CASE
-            WHEN SUM(TOTBRUTONF) > 0 THEN SUM(VLRVENDA) / SUM(TOTBRUTONF)
+            WHEN SUM(TOTBRUTONF) > 0 THEN ROUND(SUM(VLRVENDA) / SUM(TOTBRUTONF), 2)
             ELSE 0
         END AS MVA,
         
         CASE 
-            WHEN SUM(VLRVENDA) > 0 THEN ((SUM(VLRVENDA) - SUM("custo total")) / SUM(VLRVENDA)) * 100 
+            WHEN SUM(VLRVENDA) > 0 THEN ROUND((SUM(VLRVENDA) - SUM("custo total")) / SUM(VLRVENDA) * 100, 2)
             ELSE 0 
         END AS Margem_Percent,
         
@@ -127,8 +127,8 @@ WITH ClienteMetrics AS (
 
         COUNT(DISTINCT DATE(DATA) || '-' || CODCLI) AS Freq_Pedidos,
 
-        (SUM(TOTLIQ) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)) AS Peso_por_Entrega,
-        (SUM(CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)) AS Lucro_por_Entrega
+        ROUND((SUM(TOTLIQ) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)), 2) AS Peso_por_Entrega,
+        ROUND((SUM(CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)), 2) AS Lucro_por_Entrega
 
 
     FROM pcpedi
