@@ -130,6 +130,7 @@ WITH ClienteMetrics AS (
         (SUM(TOTLIQ) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)) AS Peso_por_Entrega,
         (SUM(CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)) AS Lucro_por_Entrega
 
+
     FROM pcpedi
     WHERE
         CODFILIAL = 1
