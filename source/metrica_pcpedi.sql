@@ -1,6 +1,12 @@
 -- Sistema de Ranking Completo - Versão SQLite Compatível
 -- Execute os scripts em sequência (não todos de uma vez)
 
+-- Criação de Índices para performance (execute uma vez)
+CREATE INDEX idx_pcpedi_filtros ON pcpedi(CODFILIAL, POSICAO, CONDVENDA, CONSIDERAR);
+CREATE INDEX idx_pcpedi_data ON pcpedi(DATA); -- para os cálculos de frequência
+CREATE INDEX idx_pcpedi_cliente ON pcpedi(CODCLI); -- para agrupamentos por cliente
+CREATE INDEX idx_pcpedi_produto ON pcpedi(CODPROD); -- para contagem de mix de produtos
+
 -- SCRIPT 1: Criação das tabelas (execute primeiro)
 CREATE TABLE pesos_ranking (
     kpi_nome TEXT PRIMARY KEY,
