@@ -94,6 +94,8 @@ WITH ClienteMetrics AS (
         NOME_REDE,
         CODUSUR,
         NOME,
+        RAMO,
+        MUNICENT,
         
         SUM(VLRVENDA) AS Total_Vendas,
         SUM(TOTLIQ) AS Total_Peso_Liquido,
@@ -103,6 +105,16 @@ WITH ClienteMetrics AS (
         ) AS Lucro_Total,
         
         COUNT(DISTINCT CODPROD) AS Mix_Produtos,
+
+        CASE
+            WHEN SUM(TOTBRUTONF) > 0 THEN SUM(VLRVENDA) / SUM(TOTBRUTONF)
+            ELSE 0
+        END AS MVA,
+        
+        CASE 
+            WHEN SUM(VLRVENDA) > 0 THEN ((SUM(VLRVENDA) - SUM("custo total")) / SUM(VLRVENDA)) * 100 
+            ELSE 0 
+        END AS Margem_Percent,
         
         CASE 
             WHEN CODREDE <> 0 THEN (
@@ -111,7 +123,12 @@ WITH ClienteMetrics AS (
                 WHERE p2.CODREDE = pcpedi.CODREDE
             )
             ELSE 1
-        END AS Total_Lojas_Rede
+        END AS Total_Lojas_Rede,
+
+        COUNT(DISTINCT DATE(DATA) || '-' || CODCLI) AS Freq_Pedidos,
+
+        (SUM(TOTLIQ) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)) AS Peso_por_Entrega,
+        (SUM(CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)) AS Lucro_por_Entrega
 
     FROM pcpedi
     WHERE
@@ -263,7 +280,13 @@ SELECT
     
     ROUND(
         PERCENT_RANK() OVER (ORDER BY Pontuacao_Total) * 100, 1
-    ) AS Percentil_Posicao
+    ) AS Percentil_Posicao,
+
+    Freq_Pedidos,
+    RAMO,
+    MUNICENT,
+    ROUND(MVA, 2) AS MVA,
+    ROUND(Margem_Percent, 2) AS Margem_Percent    
 
 FROM ranking_temp
 ORDER BY Pontuacao_Total DESC, Total_Vendas DESC;
