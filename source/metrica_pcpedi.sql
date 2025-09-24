@@ -138,7 +138,7 @@ WITH ClienteMetrics AS (
         AND CONDVENDA = 1
         AND CONSIDERAR = 'SIM'
     GROUP BY 
-        CODCLI, CLIENTE, CODREDE, NOME_REDE, CODUSUR, NOME
+        CODCLI, CODREDE, CODUSUR
 ),
 
 ClientesPontuados AS (
