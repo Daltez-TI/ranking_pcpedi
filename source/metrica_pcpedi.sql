@@ -94,33 +94,34 @@ DROP TABLE IF EXISTS ranking_temp;
 CREATE TABLE ranking_temp AS
 WITH ClienteMetrics AS (
     SELECT
-        CODCLI,
-        CLIENTE,
-        CODREDE,
-        NOME_REDE,
-        CODUSUR,
-        NOME,
-        RAMO,
-        MUNICENT,
+        strftime('%Y-%m', DATA) AS periodo,
+        CODCLI AS codcli,
+        CLIENTE AS cliente,
+        CODREDE AS codrede,
+        NOME_REDE AS nome_rede,
+        CODUSUR AS codusur,
+        NOME AS nome,
+        RAMO AS ramo,
+        MUNICENT AS municipio,
         
-        ROUND(SUM(VLRVENDA), 2) AS Total_Vendas,
-        ROUND(SUM(TOTLIQ), 2) AS Total_Peso_Liquido,
-        
+        ROUND(SUM(VLRVENDA), 2) AS total_vendas,
+        ROUND(SUM(TOTLIQ), 2) AS total_peso_liquido,
+
         ROUND(SUM(
             CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END
-        ), 2) AS Lucro_Total,
-        
-        COUNT(DISTINCT CODPROD) AS Mix_Produtos,
+        ), 2) AS lucro_total,
+
+        COUNT(DISTINCT CODPROD) AS mix_produtos,
 
         CASE
             WHEN SUM(TOTBRUTONF) > 0 THEN ROUND(SUM(VLRVENDA) / SUM(TOTBRUTONF), 2)
             ELSE 0
-        END AS MVA,
+        END AS mva,
         
         CASE 
             WHEN SUM(VLRVENDA) > 0 THEN ROUND((SUM(VLRVENDA) - SUM("custo total")) / SUM(VLRVENDA) * 100, 2)
             ELSE 0 
-        END AS Margem_Percent,
+        END AS margem_percent,
         
         CASE 
             WHEN CODREDE <> 0 THEN (
@@ -129,12 +130,12 @@ WITH ClienteMetrics AS (
                 WHERE p2.CODREDE = pcpedi.CODREDE
             )
             ELSE 1
-        END AS Total_Lojas_Rede,
+        END AS total_lojas_rede,
 
-        COUNT(DISTINCT DATE(DATA) || '-' || CODCLI) AS Freq_Pedidos,
+        COUNT(DISTINCT DATE(DATA) || '-' || CODCLI) AS freq_pedidos,
 
-        ROUND((SUM(TOTLIQ) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)), 2) AS Peso_por_Entrega,
-        ROUND((SUM(CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)), 2) AS Lucro_por_Entrega
+        ROUND((SUM(TOTLIQ) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)), 2) AS peso_por_entrega,
+        ROUND((SUM(CASE WHEN "custo total" > VLRVENDA THEN 0 ELSE "lucro total (R$)" END) / COUNT(DISTINCT DATE(DATA) || '-' || CODCLI)), 2) AS lucro_por_entrega
 
 
     FROM pcpedi
@@ -143,8 +144,9 @@ WITH ClienteMetrics AS (
         AND POSICAO = 'F'
         AND CONDVENDA = 1
         AND CONSIDERAR = 'SIM'
+        AND CODUSUR NOT IN (3) -- código 3 usado para funcionarios internos
     GROUP BY 
-        CODCLI, CODREDE, CODUSUR
+        periodo, codcli, codrede, codusur
 ),
 
 ClientesPontuados AS (
@@ -154,70 +156,70 @@ ClientesPontuados AS (
         COALESCE((
             SELECT pontos 
             FROM pontuacao_vendas 
-            WHERE Total_Vendas >= faixa_min AND Total_Vendas <= faixa_max
+            WHERE total_vendas >= faixa_min AND total_vendas <= faixa_max
             LIMIT 1
-        ), 1) AS Pontos_Vendas,
+        ), 1) AS pontos_vendas,
         
         COALESCE((
             SELECT pontos 
             FROM pontuacao_peso_liquido 
-            WHERE Total_Peso_Liquido >= faixa_min AND Total_Peso_Liquido <= faixa_max
+            WHERE total_peso_liquido >= faixa_min AND total_peso_liquido <= faixa_max
             LIMIT 1
-        ), 1) AS Pontos_Peso,
+        ), 1) AS pontos_peso,
         
         COALESCE((
             SELECT pontos 
             FROM pontuacao_lucro_total 
-            WHERE Lucro_Total >= faixa_min AND Lucro_Total <= faixa_max
+            WHERE lucro_total >= faixa_min AND lucro_total <= faixa_max
             LIMIT 1
-        ), 1) AS Pontos_Lucro,
+        ), 1) AS pontos_lucro,
         
         COALESCE((
             SELECT pontos 
             FROM pontuacao_mix_produtos 
-            WHERE Mix_Produtos >= faixa_min AND Mix_Produtos <= faixa_max
+            WHERE mix_produtos >= faixa_min AND mix_produtos <= faixa_max
             LIMIT 1
-        ), 1) AS Pontos_Mix
+        ), 1) AS pontos_mix 
 
     FROM ClienteMetrics
 )
 
 SELECT 
     *,
-    (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-     Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-     Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-     Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) AS Pontuacao_Total,
+    (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+     pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
+     pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+     pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) AS pontuacao_total,
      
     CASE 
-        WHEN (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
+              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 21 THEN 'AAA+'
+        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
+              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 18 THEN 'AAA'
+        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
+              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 15 THEN 'AA'
+        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
+              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 12 THEN 'A'
+        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
               Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 21 THEN 'AAA+'
-        WHEN (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 18 THEN 'AAA'
-        WHEN (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 15 THEN 'AA'
-        WHEN (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 12 THEN 'A'
-        WHEN (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 9 THEN 'B'
-        WHEN (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 6 THEN 'C'
-        WHEN (Pontos_Vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              Pontos_Lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              Pontos_Mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 3 THEN 'D'			  
+              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 9 THEN 'B'
+        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
+              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 6 THEN 'C'
+        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
+              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
+              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 3 THEN 'D'			  
         ELSE 'E'
     END AS Categoria_Cliente
 
@@ -233,80 +235,83 @@ UPDATE pontuacao_vendas
 SET qtd_clientes = (
     SELECT COUNT(*) 
     FROM ranking_temp r
-    WHERE r.Total_Vendas >= pontuacao_vendas.faixa_min 
-    AND r.Total_Vendas <= pontuacao_vendas.faixa_max
+    WHERE r.total_vendas >= pontuacao_vendas.faixa_min 
+    AND r.total_vendas <= pontuacao_vendas.faixa_max
 );
 
 UPDATE pontuacao_peso_liquido 
 SET qtd_clientes = (
     SELECT COUNT(*) 
     FROM ranking_temp r
-    WHERE r.Total_Peso_Liquido >= pontuacao_peso_liquido.faixa_min 
-    AND r.Total_Peso_Liquido <= pontuacao_peso_liquido.faixa_max
+    WHERE r.total_peso_liquido >= pontuacao_peso_liquido.faixa_min 
+    AND r.total_peso_liquido <= pontuacao_peso_liquido.faixa_max
 );
 
 UPDATE pontuacao_lucro_total 
 SET qtd_clientes = (
     SELECT COUNT(*) 
     FROM ranking_temp r
-    WHERE r.Lucro_Total >= pontuacao_lucro_total.faixa_min 
-    AND r.Lucro_Total <= pontuacao_lucro_total.faixa_max
+    WHERE r.lucro_total >= pontuacao_lucro_total.faixa_min 
+    AND r.lucro_total <= pontuacao_lucro_total.faixa_max
 );
 
 UPDATE pontuacao_mix_produtos 
 SET qtd_clientes = (
     SELECT COUNT(*) 
     FROM ranking_temp r
-    WHERE r.Mix_Produtos >= pontuacao_mix_produtos.faixa_min 
-    AND r.Mix_Produtos <= pontuacao_mix_produtos.faixa_max
+    WHERE r.mix_produtos >= pontuacao_mix_produtos.faixa_min 
+    AND r.mix_produtos <= pontuacao_mix_produtos.faixa_max
 );
 
 -- SCRIPT 4: Visualizar o ranking final (execute por último)
 create TABLE teste_por_faixas as
 SELECT
-	ROW_NUMBER() OVER (ORDER BY Pontuacao_Total DESC, Total_Vendas DESC) AS Pos_Global,
-    ROW_NUMBER() over (partition by NOME order by Pontuacao_Total desc, Total_Vendas desc) as Pos_Vendedor,
-    CAST(CODCLI AS TEXT) || ' - ' || CLIENTE AS Cliente_Info,
-    Total_Lojas_Rede,
-    CASE WHEN CODREDE <> 0 THEN NOME_REDE ELSE 'INDEPENDENTE' END AS Rede,
-	CODUSUR,
-    NOME AS Vendedor,
-    
-    ROUND(Total_Vendas, 2) AS Total_Vendas,
-    ROUND(Total_Peso_Liquido, 2) AS Total_Peso_Liquido,
-    ROUND(Lucro_Total, 2) AS Lucro_Total,
-    Mix_Produtos,
-    
-    Pontos_Vendas,
-    Pontos_Peso,
-    Pontos_Lucro,
-    Pontos_Mix,
-    
-    ROUND(Pontuacao_Total, 2) AS Pontuacao_Final,
-    Categoria_Cliente,
-    
-    ROUND(
-        PERCENT_RANK() OVER (ORDER BY Pontuacao_Total) * 100, 1
-    ) AS Percentil_Posicao,
+    periodo,
+	ROW_NUMBER() OVER (ORDER BY pontuacao_total DESC, total_vendas DESC) AS pos_global,
+    ROW_NUMBER() over (partition by nome order by pontuacao_total desc, total_vendas desc) as pos_vendedor,
+    CAST(codcli AS TEXT) || ' - ' || cliente AS cliente_info,
+    total_lojas_rede,
+    CASE WHEN codrede <> 0 THEN nome_rede ELSE 'INDEPENDENTE' END AS rede,
+	codusur,
+    nome AS vendedor,
 
-    Freq_Pedidos,
-    RAMO,
-    MUNICENT,
-    ROUND(MVA, 2) AS MVA,
-    ROUND(Margem_Percent, 2) AS Margem_Percent    
+    ROUND(total_vendas, 2) AS total_vendas,
+    ROUND(total_peso_liquido, 2) AS total_peso_liquido,
+    ROUND(lucro_total, 2) AS lucro_total,
+    mix_produtos,
+    
+    pontos_vendas,
+    pontos_peso,
+    pontos_lucro,
+    pontos_mix,
+
+    ROUND(pontuacao_total, 2) AS pontuacao_final,
+    categoria_cliente,
+
+    ROUND(
+        PERCENT_RANK() OVER (ORDER BY pontuacao_total) * 100, 1
+    ) AS percentil_posicao,
+
+    freq_pedidos,
+    ramo,
+    municipio,
+    ROUND(mva, 2) AS mva,
+    ROUND(margem_percent, 2) AS margem_percent,
+    ROUND(peso_por_entrega, 2) AS peso_por_entrega,
+    ROUND(lucro_por_entrega, 2) AS lucro_por_entrega
 
 FROM ranking_temp
-ORDER BY Pontuacao_Total DESC, Total_Vendas DESC;
+ORDER BY pontuacao_total DESC, total_vendas DESC;
 
 -- SCRIPTS AUXILIARES (executar conforme necessidade):
 
 -- Ver distribuição nas faixas:
 SELECT 
-    'VENDAS' AS KPI,
-    CAST(faixa_min AS TEXT) || ' - ' || CAST(faixa_max AS TEXT) AS Faixa,
-    pontos AS Pontos,
-    qtd_clientes AS Qtd_Clientes,
-    ROUND(qtd_clientes * 100.0 / (SELECT COUNT(*) FROM ranking_temp), 1) AS Percentual
+    'VENDAS' AS kpi,
+    CAST(faixa_min AS TEXT) || ' - ' || CAST(faixa_max AS TEXT) AS faixa,
+    pontos AS pontos,
+    qtd_clientes AS qtd_clientes,
+    ROUND(qtd_clientes * 100.0 / (SELECT COUNT(*) FROM ranking_temp), 1) AS percentual
 FROM pontuacao_vendas
 UNION ALL
 SELECT 'PESO_LIQUIDO', CAST(faixa_min AS TEXT) || ' - ' || CAST(faixa_max AS TEXT), pontos, qtd_clientes,
@@ -317,10 +322,10 @@ SELECT 'LUCRO_TOTAL', CAST(faixa_min AS TEXT) || ' - ' || CAST(faixa_max AS TEXT
 UNION ALL
 SELECT 'MIX_PRODUTOS', CAST(faixa_min AS TEXT) || ' - ' || CAST(faixa_max AS TEXT), pontos, qtd_clientes,
        ROUND(qtd_clientes * 100.0 / (SELECT COUNT(*) FROM ranking_temp), 1) FROM pontuacao_mix_produtos
-ORDER BY KPI, pontos;
+ORDER BY kpi, pontos;
 
 -- Ver pesos atuais:
-SELECT kpi_nome AS KPI, peso AS Peso_Atual, ROUND(peso * 100, 1) AS Percentual, descricao 
+SELECT kpi_nome AS kpi, peso AS peso_atual, ROUND(peso * 100, 1) AS percentual, descricao
 FROM pesos_ranking ORDER BY peso DESC;
 
 -- Para alterar pesos (exemplo):
