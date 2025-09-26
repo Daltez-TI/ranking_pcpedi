@@ -146,7 +146,7 @@ WITH ClienteMetrics AS (
         AND CONSIDERAR = 'SIM'
         AND CODUSUR NOT IN (3) -- código 3 usado para funcionarios internos
     GROUP BY 
-        periodo, codcli, codrede, codusur
+        periodo, codcli
 ),
 
 ClientesPontuados AS (
