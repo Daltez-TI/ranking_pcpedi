@@ -267,8 +267,8 @@ SET qtd_clientes = (
 create TABLE teste_por_faixas as
 SELECT
     periodo,
-	ROW_NUMBER() OVER (ORDER BY pontuacao_total DESC, total_vendas DESC) AS pos_global,
-    ROW_NUMBER() over (partition by nome order by pontuacao_total desc, total_vendas desc) as pos_vendedor,
+	ROW_NUMBER() OVER (PARTITION BY periodo ORDER BY pontuacao_total DESC, total_vendas DESC) AS pos_global,
+    ROW_NUMBER() over (partition by periodo, nome order by pontuacao_total desc, total_vendas desc) as pos_vendedor,
     CAST(codcli AS TEXT) || ' - ' || cliente AS cliente_info,
     total_lojas_rede,
     CASE WHEN codrede <> 0 THEN nome_rede ELSE 'INDEPENDENTE' END AS rede,
@@ -289,7 +289,7 @@ SELECT
     categoria_cliente,
 
     ROUND(
-        PERCENT_RANK() OVER (ORDER BY pontuacao_total) * 100, 1
+        PERCENT_RANK() OVER (PARTITION BY periodo ORDER BY pontuacao_total) * 100, 1
     ) AS percentil_posicao,
 
     freq_pedidos,
@@ -301,6 +301,7 @@ SELECT
     ROUND(lucro_por_entrega, 2) AS lucro_por_entrega
 
 FROM ranking_temp
+-- GROUP BY periodo
 ORDER BY pontuacao_total DESC, total_vendas DESC;
 
 -- SCRIPTS AUXILIARES (executar conforme necessidade):
