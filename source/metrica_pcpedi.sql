@@ -2,10 +2,10 @@
 -- Execute os scripts em sequência (não todos de uma vez)
 
 -- Criação de Índices para performance (execute uma vez)
-CREATE INDEX idx_pcpedi_filtros ON pcpedi(CODFILIAL, POSICAO, CONDVENDA, CONSIDERAR);
-CREATE INDEX idx_pcpedi_data ON pcpedi(DATA); -- para os cálculos de frequência
-CREATE INDEX idx_pcpedi_cliente ON pcpedi(CODCLI); -- para agrupamentos por cliente
-CREATE INDEX idx_pcpedi_produto ON pcpedi(CODPROD); -- para contagem de mix de produtos
+-- CREATE INDEX idx_pcpedi_filtros ON pcpedi(CODFILIAL, POSICAO, CONDVENDA, CONSIDERAR);
+-- CREATE INDEX idx_pcpedi_data ON pcpedi(DATA); -- para os cálculos de frequência
+-- CREATE INDEX idx_pcpedi_cliente ON pcpedi(CODCLI); -- para agrupamentos por cliente
+-- CREATE INDEX idx_pcpedi_produto ON pcpedi(CODPROD); -- para contagem de mix de produtos
 
 -- SCRIPT 1: Criação das tabelas (execute primeiro)
 CREATE TABLE pesos_ranking (
@@ -29,13 +29,11 @@ CREATE TABLE pontuacao_vendas (
 
 INSERT INTO pontuacao_vendas VALUES
 (0, 1000, 1, 0),
-(1000.01, 5000, 3, 0),
-(5000.01, 15000, 6, 0),
-(15000.01, 30000, 10, 0),
-(30000.01, 50000, 15, 0),
-(50000.01, 100000, 22, 0),
-(100000.01, 200000, 30, 0),
-(200000.01, 999999999, 40, 0);
+(1000.01, 3000, 3, 0),
+(3000.01, 5000, 6, 0),
+(5000.01, 10000, 10, 0),
+(10000.01, 20000, 15, 0),
+(20000.01, 999999999, 21, 0);
 
 CREATE TABLE pontuacao_peso_liquido (
     faixa_min DECIMAL(10,2),
@@ -62,14 +60,12 @@ CREATE TABLE pontuacao_lucro_total (
 );
 
 INSERT INTO pontuacao_lucro_total VALUES
-(0, 50, 1, 0),
-(50.01, 200, 3, 0),
+(0, 100, 1, 0),
+(100.01, 200, 3, 0),
 (200.01, 500, 6, 0),
 (500.01, 1000, 10, 0),
-(1000.01, 2500, 15, 0),
-(2500.01, 5000, 22, 0),
-(5000.01, 10000, 28, 0),
-(10000.01, 999999999, 35, 0);
+(1000.01, 2000, 15, 0),
+(2000.01, 999999999, 21, 0);
 
 CREATE TABLE pontuacao_mix_produtos (
     faixa_min INT,
@@ -195,27 +191,19 @@ SELECT
         WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
               pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
               pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 21 THEN 'AAA+'
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 21 THEN '(VIP)'
         WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
               pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
               pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 18 THEN 'AAA'
-        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 15 THEN 'AA'
-        WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
-              pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
-              pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 12 THEN 'A'
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 18 THEN 'A'
         WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
               Pontos_Peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
               pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 9 THEN 'B'
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 12 THEN 'B'
         WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
               pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
               pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
-              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 6 THEN 'C'
+              pontos_mix * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'mix_produtos')) >= 7 THEN 'C'
         WHEN (pontos_vendas * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'vendas') + 
               pontos_peso * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'peso_liquido') + 
               pontos_lucro * (SELECT peso FROM pesos_ranking WHERE kpi_nome = 'lucro_total') + 
