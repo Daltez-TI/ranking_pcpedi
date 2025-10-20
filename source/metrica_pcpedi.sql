@@ -140,7 +140,7 @@ WITH ClienteMetrics AS (
         AND POSICAO = 'F'
         AND CONDVENDA = 1
         AND CONSIDERAR = 'SIM'
-        AND CODUSUR NOT IN (3), -- código 3 usado para funcionarios internos
+        AND CODUSUR NOT IN (3) -- código 3 usado para funcionarios internos
         AND NOME NOT IN ('VENDA DIRETA DEPOSITO', 'APP ION')
         AND RAMO NOT LIKE '%FUNCIONARIO'
     GROUP BY 
