@@ -14,7 +14,7 @@ O Sistema de Ranking Global de Clientes é uma solução analítica que consolid
 ### ✨ Principais Características
 
 - 🔬 **Fundamentação Estatística**: Uso de faixas de valor predefinidas para atribuir pontos
-- 📊 **7 Métricas Integradas**: Vendas, Lucro, Mix e Peso Liquido. 
+- 📊 **4 Métricas Integradas**: Vendas, Lucro, Mix e Peso Liquido. 
 - 🎯 **6 Níveis de Classificação**: (VIP), A, B, C, D e E
 - ⚡ **Pipeline Automatizado**: Processamento SQL otimizado
 - 📈 **Dashboards Prontos**: Especificações Power BI incluídas
