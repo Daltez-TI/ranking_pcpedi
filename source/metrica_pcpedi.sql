@@ -141,8 +141,8 @@ WITH ClienteMetrics AS (
         AND CONDVENDA = 1
         AND CONSIDERAR = 'SIM'
         AND CODUSUR NOT IN (3), -- código 3 usado para funcionarios internos
-        AND NOME <> 'VENDA DIRETA DEPOSITO',
-        AND RAMO <> 'EX FUNCIONARIO'
+        AND NOME NOT IN ('VENDA DIRETA DEPOSITO', 'APP ION')
+        AND RAMO NOT LIKE '%FUNCIONARIO'
     GROUP BY 
         periodo, codcli
 ),

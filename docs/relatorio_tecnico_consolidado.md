@@ -169,11 +169,11 @@ O Score Final (soma ponderada) é mapeado em **6 níveis hierárquicos** de clie
 ```mermaid
 graph TD
     A[Fonte de Dados<br/>ERP / PCPEDI] --> B[Script 1: Criação de Tabelas<br/>Pesos e Pontuações Fixas]
-    B --> C[Script 2: Cálculo de Métricas<br/>Consolidação por Cliente (CTE ClienteMetrics)]
-    C --> D[Script 2: Pontuação<br/>Mapeamento de Pontos por Faixa (CTE ClientesPontuados)]
+    B --> C[Script 2: Cálculo de Métricas<br/>Consolidação por Cliente - CTE ClienteMetrics]
+    C --> D[Script 2: Pontuação<br/>Mapeamento de Pontos por Faixa - CTE ClientesPontuados]
     D --> E[Script 2: Score Ponderado e Categoria<br/>Tabela ranking_temp]
     E --> F[Script 3: Atualização de Contadores<br/>qtd_clientes nas tabelas de pontuação]
-    F --> G[Script 4: View/Tabela Final<br/>Tabela teste_por_faixas (Ranking Consolidado)]
+    F --> G[Script 4: View/Tabela Final<br/>Tabela teste_por_faixas - Ranking Consolidado]
     G --> H[Power BI / Dashboard<br/>Visualização Interativa]
 ```
 
@@ -182,7 +182,7 @@ graph TD
 #### 5.2.1 Pré-processamento e Filtros
 
   - **Filtros aplicados**: `CODFILIAL = 1`, `POSICAO = 'F'`, `CONDVENDA = 1`, `CONSIDERAR = 'SIM'`.
-  - **Exclusão de Funcionários**: `CODUSUR NOT IN (3)`.
+  - **Exclusões**: `CODUSUR NOT IN (3)`,  `NOME NOT IN ('VENDA DIRETA DEPOSITO', 'APP ION')`,  `RAMO NOT LIKE '%FUNCIONARIO'`
   - **Agrupamento**: A consolidação é feita por `periodo` (mês/ano) e `codcli`.
 
 #### 5.2.2 Consolidação e Cálculo de Pontos (SCRIPT 2)
@@ -252,21 +252,17 @@ ROUND(SUM(
 
 ### 9.2 Roadmap Futuro
 
-#### 9.3.1 Versão 0.0.4 (Curto Prazo)
+#### 9.3.1 Versão 0.0.4
 
   - **Métricas Temporais Essenciais**:
       - Implementação completa de **Recência** (Dias desde a última compra).
       - Adição do cálculo de **Estabilidade** (Coeficiente de Variação) das vendas.
-  - **Flexibilidade de Faixas**:
-      - Criação de um processo (Python ou SQL) para recalcular automaticamente as faixas de pontuação usando quartis ou NTILEs.
 
-#### 9.3.2 Versão 1.0.0 (Médio Prazo)
+#### 9.3.2 Versão 1.0.0
 
-  - **Metodologia PCA**:
+  - **Metodologia PCA (abandonada)**:
       - Reintrodução da metodologia PCA para cálculo estatístico dos pesos.
       - Implementação de um script Python para gerar os pesos e atualizar a tabela `pesos_ranking`.
-  - **Machine Learning Avançado**:
-      - Algoritmos de clustering para segmentação automática de clientes.
 
 -----
 
