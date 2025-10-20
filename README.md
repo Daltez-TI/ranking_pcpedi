@@ -15,7 +15,7 @@ O Sistema de Ranking Global de Clientes é uma solução analítica que consolid
 
 - 🔬 **Fundamentação Estatística**: Uso de faixas de valor predefinidas para atribuir pontos
 - 📊 **7 Métricas Integradas**: Vendas, Lucro, Mix e Peso Liquido. 
-- 🎯 **6 Níveis de Classificação**: (VIP), A, B, C, D, E
+- 🎯 **6 Níveis de Classificação**: (VIP), A, B, C, D e E
 - ⚡ **Pipeline Automatizado**: Processamento SQL otimizado
 - 📈 **Dashboards Prontos**: Especificações Power BI incluídas
 - 🔄 **Modular e Expansível**: Fácil adição de novas métricas
@@ -107,7 +107,7 @@ ranking-clientes/
 
 ```mermaid
 graph LR
-    A[ERP Data] --> B[Python PCA]
+    A[ERP Data] --> B[Python]
     B --> C[Weights Table]
     C --> D[SQL Ranking]
     D --> E[Power BI]
@@ -123,8 +123,8 @@ graph LR
 ## 💡 Casos de Uso
 
 ### 🎯 Comercial
-- **Priorização de visitas**: Foque nos AAA+ e AAA primeiro
-- **Identificação de oportunidades**: Clientes AA com potencial de upgrade
+- **Priorização de visitas**: Foco cliente E = aumentar mix produtos
+- **Identificação de oportunidades**: Clientes D e C com potencial de upgrade
 - **Alertas de churn**: Monitoramento de recência e frequência
 
 ### 📦 Logística  
@@ -133,7 +133,7 @@ graph LR
 - **Capacidade de entrega**: Análise de sazonalidade
 
 ### 💰 Financeiro
-- **Gestão de crédito**: Classificação AAA+ para limites especiais
+- **Gestão de crédito**: Classificação (VIP) para limites especiais
 - **Previsão de receita**: Análise de estabilidade temporal
 - **ROI comercial**: Foco em clientes de alto valor
 
@@ -149,7 +149,7 @@ graph LR
 
 ### 3. 👤 Perfil Individual
 - Drill-down detalhado por cliente
-- Gráfico radar de 7 dimensões
+- Gráfico radar de 4 dimensões
 
 ### 4. 🎯 Análise Estratégica
 - Mapa geográfico de clientes
@@ -204,18 +204,18 @@ MANUAL_WEIGHTS = None
 - 📖 [Relatório Técnico Completo](docs/relatorio_tecnico_consolidado.md)
 - 🔄 [Fluxo de Processamento](docs/fluxo_ranking.md)  
 - 📊 [Especificação Dashboards](docs/layout_dashboard_padrao.md)
-- 🧮 [Metodologia PCA](docs/metodologia_pca.md)
+- 🧮 [Metodologia PCA (abandonada)](docs/metodologia_pca.md)
 
 ## ❓ FAQ
 
 ### **P: Como os pesos são calculados?**
-R: Automaticamente via PCA (Principal Component Analysis), garantindo fundamentação estatística sem viés subjetivo.
+R: Manualmente, com base no expertise gerencial. Subjetivo.
 
 ### **P: Posso adicionar novas métricas?**
-R: Sim! O sistema é modular. Adicione a métrica no SQL e execute novamente o PCA para recalcular os pesos.
+R: Sim! O sistema é modular. Adicione a métrica no SQL e crie a tabela de faixas e pontuação para a mesma.
 
 ### **P: Com que frequência atualizar?**
-R: Recomendado mensalmente para dados operacionais e trimestralmente para recálculo de pesos PCA.
+R: Recomendado mensalmente para dados operacionais.
 
 ### **P: O que é MVA?**
 R: *Margem de Valor Agregado* = Valor de Venda ÷ Peso Bruto. Métrica inovadora que identifica clientes de produtos de alto valor agregado.
@@ -226,9 +226,6 @@ R: *Margem de Valor Agregado* = Valor de Venda ÷ Peso Bruto. Métrica inovadora
 - 🔄 Performance: Para >100k clientes, considere processamento incremental
 - 📊 Power BI: Algumas visualizações podem precisar de ajustes de tema
 
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhes.
 
 ## 👨‍💻 Autor
 
