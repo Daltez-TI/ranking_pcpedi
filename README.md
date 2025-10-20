@@ -5,17 +5,17 @@
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
 [![SQL](https://img.shields.io/badge/database-SQLite-lightgrey.svg)]()
 
-> Sistema avançado de classificação e ranking de clientes baseado em múltiplas métricas de performance com fundamentação estatística via PCA (Principal Component Analysis).
+> Sistema avançado de classificação e ranking de clientes baseado em múltiplas métricas de performance com base no seu desempenho em métricas-chave e pesos predefinidos.
 
 ## 🎯 Visão Geral
 
-O Sistema de Ranking Global de Clientes é uma solução analítica que consolida **7 dimensões de análise** em um score único e objetivo para classificação hierárquica de clientes. O sistema utiliza **metodologia PCA** para cálculo automático de pesos estatísticos, eliminando subjetividade e garantindo robustez matemática.
+O Sistema de Ranking Global de Clientes é uma solução analítica que consolida **4 dimensões de análise** em um score único e objetivo para classificação hierárquica de clientes. O sistema utiliza métricas-chave por faixa de valor e pesos estabelecidos com base em regras de negócio subjetivas da gerência e direção.
 
 ### ✨ Principais Características
 
-- 🔬 **Fundamentação Estatística**: Pesos calculados automaticamente via PCA
-- 📊 **7 Métricas Integradas**: Vendas, Lucro, MVA, Margem, Frequência, Eficiência e Diversidade  
-- 🎯 **6 Níveis de Classificação**: De AAA+ (Top 10%) até C (Desenvolvimento)
+- 🔬 **Fundamentação Estatística**: Uso de faixas de valor predefinidas para atribuir pontos
+- 📊 **7 Métricas Integradas**: Vendas, Lucro, Mix e Peso Liquido. 
+- 🎯 **6 Níveis de Classificação**: (VIP), A, B, C, D, E
 - ⚡ **Pipeline Automatizado**: Processamento SQL otimizado
 - 📈 **Dashboards Prontos**: Especificações Power BI incluídas
 - 🔄 **Modular e Expansível**: Fácil adição de novas métricas
@@ -52,18 +52,13 @@ DATABASE_PATH = "caminho/para/seu/database.db3"
 
 ### Uso Básico
 
-1. **Execute o cálculo de pesos PCA**
-```bash
-python pesos_estatisticos_com_pca.py
-```
-
-2. **Execute a query de ranking**
+1. **Execute a query de ranking**
 ```sql
 -- Execute metrica_pcpedi.sql no seu banco SQLite
 sqlite3 database.db3 < metrica_pcpedi.sql
 ```
 
-3. **Conecte o Power BI**
+2. **Conecte o Power BI**
 ```
 Fonte: SQLite Database
 Tabela: teste5 (resultado final)
@@ -71,28 +66,23 @@ Tabela: teste5 (resultado final)
 
 ## 📊 Métricas do Sistema
 
-| Métrica              | Descrição                                  |
-|----------------------|--------------------------------------------|
-| **Vendas Totais**    | Volume financeiro consolidado              |
-| **Lucro Total**      | Contribuição absoluta de rentabilidade     |
-| **Margem %**         | Qualidade da margem independente do volume |
-| **Eficiência/Kg**    | Otimização logística por peso líquido      |
-| **Frequência**       | Recorrência de pedidos (fidelidade)        |
-| **Diversidade**      | Diversidade de produtos                    |
-| **MVA (Valor/Peso)** | Eficiência por unidade de peso²            |
+| Métrica              | Descrição                                      |
+|----------------------|------------------------------------------------|
+| **Vendas Totais**    | Volume financeiro consolidado                  |
+| **Lucro Total**      | Contribuição absoluta de rentabilidade         |
+| **Peso Liquido**     | Pelo liquido total (kg) dos produtos comprados |
+| **Mix Produtos**     | Mix de produtos no periodo em análise          |
 
-¹ *Pesos calculados automaticamente via PCA*  
-² *Métrica inovadora do modelo*
 
 ## 🏆 Sistema de Classificação
 
 ```
-🥇 AAA+ (Top 10%)     → Clientes estratégicos
-🥈 AAA (Top 20%)      → Clientes preferenciais  
-🥉 AA (Top 40%)       → Bom potencial
-⭐ A (Médio Alto)     → Relacionamento sólido
-📊 B (Médio)          → Oportunidade
-🌱 C (Desenvolvimento) → Novo/Pequeno
+🥇 (VIP) (Top 10%)     → Clientes estratégicos
+🥈 A (Top 20%)         → Clientes preferenciais  
+🥉 B (Top 40%)         → Bom potencial
+⭐ C (Médio Alto)      → Relacionamento sólido
+📊 D (Médio)           → Oportunidade
+🌱 E (Desenvolvimento) → Novo/Pequeno
 ```
 
 ## 🔧 Estrutura do Projeto
@@ -127,9 +117,8 @@ graph LR
 ```
 
 1. **Extração**: Dados do ERP/PCPEDI
-2. **PCA**: Cálculo automático de pesos
-3. **SQL**: Consolidação e ranking por cliente  
-4. **BI**: Visualização interativa
+2. **SQL**: Consolidação e ranking por cliente  
+3. **BI**: Visualização interativa
 
 ## 💡 Casos de Uso
 
@@ -170,7 +159,7 @@ graph LR
 
 - **v0.0.1**: Modelo transacional básico
 - **v0.0.2**: Consolidação por cliente + MVA  
-- **v0.0.3**: **[ATUAL]** Metodologia PCA + Pipeline otimizado
+- **v0.0.3**: **[ATUAL]** Metodologia de pontuação por faixas
 - **v0.0.4**: *[PLANEJADO]* Métricas temporais avançadas
 
 ## 🤝 Contribuição
@@ -192,19 +181,22 @@ python -m pytest tests/ -v
 ### Arquivo config.py
 ```python
 # Configurações do banco
-DATABASE_PATH = "database/prototipagem_ranking_Jul25.db3"
+DATABASE_PATH = "database/nome_bando_dados.db3"
 SOURCE_TABLE = "pcpedi"
-WEIGHTS_TABLE = "pesos_ranking_pca"
 
 # Filtros padrão
 DEFAULT_FILTERS = {
     'CODFILIAL': 1,
     'POSICAO': 'F', 
-    'CONDVENDA': 1
+    'CONDVENDA': 1,
+    'CONSIDERAR' = 'SIM',
+    'CODUSUR' NOT IN (3),
+    'NOME' <> 'VENDA DIRETA DEPOSITO',
+    'RAMO' <> 'EX FUNCIONARIO'
 }
 
-# Pesos manuais (opcional - sobrescreve PCA)
-MANUAL_WEIGHTS = None  # Use None para PCA automático
+
+MANUAL_WEIGHTS = None  
 ```
 
 ## 📚 Documentação Adicional
