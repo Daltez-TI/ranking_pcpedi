@@ -11,6 +11,8 @@
 
 O Sistema de Ranking Global de Clientes é uma solução analítica que consolida **4 dimensões de análise** em um score único e objetivo para classificação hierárquica de clientes. O sistema utiliza métricas-chave por faixa de valor e pesos estabelecidos com base em regras de negócio subjetivas da gerência e direção.
 
+Com o objetivo de melhorar a granularidade do projeto, foi incluido um campo para uma Curva ABC de tal forma que cada Categoria de rank por cliente agora também possui classificação ABC.
+
 ### ✨ Principais Características
 
 - 🔬 **Fundamentação Estatística**: Uso de faixas de valor predefinidas para atribuir pontos
@@ -54,14 +56,21 @@ DATABASE_PATH = "caminho/para/seu/database.db3"
 
 1. **Execute a query de ranking**
 ```sql
--- Execute metrica_pcpedi.sql no seu banco SQLite
+-- Passo 1: Execute metrica_pcpedi.sql no seu banco de dados SQLite para criar
+--          as tabelas ranking_temp e teste_por_faixas
 sqlite3 database.db3 < metrica_pcpedi.sql
+
+-- Passo 2: Execute 02_curva_ABC_Geral_por_Periodo_pos_rankeamento.sql para
+--          gerar a Curva ABC. A mesma atua sobre a tabela teste_por_faixas
+--          criada no passo anterior.
+sqlite3 database.db3 < 02_curva_ABC_Geral_por_Periodo_pos_rankeamento.sql
+
 ```
 
 2. **Conecte o Power BI**
 ```
 Fonte: SQLite Database
-Tabela: teste5 (resultado final)
+Tabela: teste_por_faixas (resultado final)
 ```
 
 ## 📊 Métricas do Sistema
@@ -123,16 +132,19 @@ graph LR
 ## 💡 Casos de Uso
 
 ### 🎯 Comercial
+
 - **Priorização de visitas**: Foco cliente E = aumentar mix produtos
 - **Identificação de oportunidades**: Clientes D e C com potencial de upgrade
 - **Alertas de churn**: Monitoramento de recência e frequência
 
-### 📦 Logística  
+### 📦 Logística
+
 - **Otimização de rotas**: Use métrica MVA para planejamento
 - **Negociação de fretes**: Baseada em valor por peso
 - **Capacidade de entrega**: Análise de sazonalidade
 
 ### 💰 Financeiro
+
 - **Gestão de crédito**: Classificação (VIP) para limites especiais
 - **Previsão de receita**: Análise de estabilidade temporal
 - **ROI comercial**: Foco em clientes de alto valor
@@ -140,18 +152,23 @@ graph LR
 ## 📊 Dashboards Incluídos
 
 ### 1. 📋 Visão Geral Executiva
+
 - KPIs principais e Top 10 clientes
 - Filtros dinâmicos por período/região
 
-### 2. 📅 Análise Temporal  
+### 2. 📅 Análise Temporal
+
 - Evolução mensal e sazonalidade
 - Comparativo de temporadas
 
 ### 3. 👤 Perfil Individual
-- Drill-down detalhado por cliente
-- Gráfico radar de 4 dimensões
 
-### 4. 🎯 Análise Estratégica
+- Drill-down detalhado por cliente e Categoria
+- Gráfico de Dispersão (Scatter Plot)
+- Gráfico de Dispersão (Scatter Plot) com python
+
+### 4. 🎯 Análise Estratégica (em desenvolvimento)
+
 - Mapa geográfico de clientes
 - Matriz crescimento × rentabilidade
 
@@ -179,6 +196,7 @@ python -m pytest tests/ -v
 ## 📝 Configuração
 
 ### Arquivo config.py
+
 ```python
 # Configurações do banco
 DATABASE_PATH = "database/nome_bando_dados.db3"
@@ -209,15 +227,19 @@ MANUAL_WEIGHTS = None
 ## ❓ FAQ
 
 ### **P: Como os pesos são calculados?**
+
 R: Manualmente, com base no expertise gerencial. Subjetivo.
 
 ### **P: Posso adicionar novas métricas?**
+
 R: Sim! O sistema é modular. Adicione a métrica no SQL e crie a tabela de faixas e pontuação para a mesma.
 
 ### **P: Com que frequência atualizar?**
+
 R: Recomendado mensalmente para dados operacionais.
 
 ### **P: O que é MVA?**
+
 R: *Margem de Valor Agregado* = Valor de Venda ÷ Peso Bruto. Métrica inovadora que identifica clientes de produtos de alto valor agregado.
 
 ## 🐛 Problemas Conhecidos
@@ -229,8 +251,9 @@ R: *Margem de Valor Agregado* = Valor de Venda ÷ Peso Bruto. Métrica inovadora
 
 ## 👨‍💻 Autor
 
-**Marcelo G Facioli**
-- 📧 Email: marcelo.facioli@daltez.com.br
+### **Marcelo G Facioli**
+
+- 📧 Email: <marcelo.facioli@daltez.com.br>
 - 💼 LinkedIn: [seu-perfil](https://www.linkedin.com/in/marcelo-grandolpho-facioli-99744548/)
 
 ## 🙏 Agradecimentos
@@ -246,5 +269,4 @@ R: *Margem de Valor Agregado* = Valor de Venda ÷ Peso Bruto. Métrica inovadora
 **⭐ Se este projeto foi útil, considere dar uma estrela!**
 
 [⬆️ Voltar ao topo](#sistema-de-ranking-global-de-clientes)
-
 </div>
